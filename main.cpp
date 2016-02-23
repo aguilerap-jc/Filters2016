@@ -72,6 +72,7 @@ double areaColorDetectionW;
 double areaColorDetectionB;
 //-----------------RED FILTER----------------
 int RiLowH = 160;
+
 int RiHighH = 179;
 int RiLowS = 100;
 int RiHighS = 255;
@@ -96,6 +97,32 @@ int BiLowS = 0;    //181     //255              0
 int BiHighS = 255; //255     //255             255
 int BiLowV = 26;   //90      //060              0
 int BiHighV = 61; //255     //255             255
+
+int RiHighH= 179;
+int RiLowS = 100;
+int RiHighS= 255;
+int RiLowV = 100;
+int RiHighV= 255;
+//-----------------RED FILTER----------------
+
+//---------------WHITE FILTER----------------
+int WiLowH = 0;        // 15
+int WiHighH= 179;      // 179
+int WiLowS = 0;         // 0
+int WiHighS= 255;      // 255
+int WiLowV = 200;       // 255
+int WiHighV= 230;      // 255
+//---------------WHITE FILTER----------------
+
+//-------------------BROWN FILTER---------------------
+                   //Claro   //obscuro    //Azul
+int BiLowH = 12;   //12     //135          121
+int BiHighH= 44;   //44     //179          179
+int BiLowS = 20;   //20     //30            0
+int BiHighS= 121;  //121    //101          255
+int BiLowV = 131;  //131    //85            0
+int BiHighV= 182;  //182    //145          255
+
 //-----------------BROWN FILTER----------------------
 
 //-------------End of Filter Variables---------------
@@ -158,9 +185,14 @@ int main(int argc, char *argv[]) {
     //cout << "IP: " << ip << endl;
 
     //-----Calibration bools ---------------
+
     bool calibrateB = true;
     bool calibrateR = true;
     bool calibrateW = true;
+
+    bool calibrateB = false;
+    bool calibrateR = false;
+    bool calibrateW = false;
     //-----Calibration bools ---------------
 
     bool LOCAL = false;         // Flap for the kind of execution (local or remote).
@@ -194,7 +226,50 @@ int main(int argc, char *argv[]) {
         if (waitKey(3)== 'x')
             break;
    }
+        //HSVColorPlot();
+        //RedFilter(frame,calibrateR);
+        //BrownFilter(frame,calibrateB);
+        //WhiteFilter(frame,calibrateW);
+        //imshow("img",frame);
+        if(areaColorDetectionR > 25)
+             cout << "Metal " << areaColorDetectionR <<endl;
+        //if(areaColorDetectionB > 35)
+              cout << "Carton " << endl;
+        if(areaColorDetectionW > 35)
+              cout << "Plastico " << areaColorDetectionW << endl;
 
+        if(waitKey(10) == 'x')
+            break;
+    }
+
+    /*
+    naoMovement.initialPositionIndividualRace();
+
+
+    while (key != 27 && !finish) {
+        if (NAO) {
+            src = naoVision.getImageFrom(NaoVision::BOTTOM_CAMERA);
+        } else {
+            cap >> src;
+            naoVision.setSourceMat(src);
+        }
+
+        if (naoVision.naoIsNearTheGoal(src)) {
+            naoMovement.naoOnGoal();
+            finish = true;
+        } else {
+            angleToBlackLine = naoVision.calculateAngleToBlackLine();
+            naoMovement.moveInIndividualRace(angleToBlackLine);
+        }
+
+        key = waitKey(10);
+
+        for (int i = 0; i < 250000; i++);   // Delay.
+    }
+
+    naoVision.unsubscribe();
+    naoMovement.stop();
+    */
 
     return 0;
 }
@@ -289,7 +364,6 @@ void WhiteFilter(Mat originalImage,bool calibrateW){
     // Blur to soften the image points.
     blur(src_gray, src_gray, Size(3,3));
 }
-
 void BrownFilter(Mat originalImage,bool calibrateB){
     Mat src_gray;
     Mat imgHSV;
@@ -413,7 +487,10 @@ void onTrackbar_changed(int, void*){
         }
     }
 
+
     //Ploaxt for HSV
+
+    //Ploat for HSV
     Mat roi1(HSV,Rect(HSV_x,HSV_y,HSV_Width,HSV_Height));
     roi1=Scalar(H,S,V);
     //drawPointers();
@@ -485,3 +562,87 @@ void drawPointers(){
     sprintf(name,"V=%d",V);
     putText(HSV,name, Point(545,205) , FONT_HERSHEY_SIMPLEX, .7, Scalar(5,255,255), 2,8,false );
 }
+
+//--------PRUEBAS--------------
+//--------Nao Mark--------------
+/*
+void buscarNaomark(AL::ALMotionProxy movimiento, AL::ALMemoryProxy memoria, AL::ALLandMarkDetectionProxy naoMark, AL::ALTextToSpeechProxy say)
+{
+
+    int contador;
+    bool detected ;
+
+    AL::ALValue markInfo = "";
+
+    contador = 0;
+    detected = false;
+    do{
+        markInfo = memoria.getData("LandmarkDetected");
+        contador++;
+        if (markInfo.getSize()!=0)
+            detected = true;
+    }while(contador < 10 && !detected);
+
+    if(markInfo.getSize() != 0) {
+        string markID = "";
+        markID = markInfo[1][0][1].toString().substr(1,3);
+        say.say(markID);
+        cout << "markID = " << markID << std::endl;
+    }
+    else
+    {
+        cout << "No se detectó marca enfrente" << std::endl;
+
+        movimiento.angleInterpolation("HeadYaw",M_PI/2, 1.0 ,true);
+
+        usleep(1000000);
+
+        contador = 0;
+        detected = false;
+        do{
+            markInfo = memoria.getData("LandmarkDetected");
+            contador++;
+            if (markInfo.getSize()!=0)
+                detected = true;
+        }while(contador < 10 && !detected);
+
+        if(markInfo.getSize() != 0) {
+            std::string markID = "";
+            markID = markInfo[1][0][1].toString().substr(1,3);
+            say.say(markID);
+            std::cout << "markID = " << markID << std::endl;
+            movimiento.moveTo(0,0, giro90Izquierda-0.21);
+        }
+        else
+        {
+            std::cout << "No se detectó marca a la izquierda" << std::endl;
+            movimiento.angleInterpolation("HeadYaw",-M_PI/2, 1.0 ,true);
+
+            usleep(1000000);
+
+            contador = 0;
+            detected = false;
+            do{
+                markInfo = memoria.getData("LandmarkDetected");
+                contador++;
+                if (markInfo.getSize()!=0)
+                    detected = true;
+            }while(contador < 10  && !detected);
+
+            if(markInfo.getSize() != 0) {
+                std::string markID = "";
+                markID = markInfo[1][0][1].toString().substr(1,3);
+                say.say(markID);
+                std::cout << "markID = " << markID << std::endl;
+                movimiento.moveTo(0,0, giro90Derecha);
+            }
+            else
+            {
+                std::cout << "No se detectó a la derecha" << std::endl;
+            }
+        }
+        movimiento.angleInterpolation("HeadYaw",0, 1.0 ,true);
+    }
+}
+*/
+//--------Nao Mark--------------
