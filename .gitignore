@@ -1,0 +1,9 @@
+CMakeLists.txt
+CMakeLists.txt.user
+filters.cpp 
+qiproject.xml
+
+build-naoqi-sdk1.14/**/*
+build-sys-linux-x86_64/**/*
+
+
